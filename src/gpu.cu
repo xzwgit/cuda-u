@@ -50,6 +50,12 @@ const char *archName(int maj, int min) {
 // chip codenames (NVIDIA whitepaper appendix tables), longest match first so
 // "RTX 4070 Ti Super" (AD103) wins over "RTX 4070 Ti" (AD104)
 struct { const char *name, *code; } kCodeNames[] = {
+	// workstation parts first: "RTX 6000D" contains "RTX 6000", the plain
+	// Turing fallback must stay last of this group
+	{"RTX PRO 6000", "GB202"},	// Blackwell workstation/server edition
+	{"RTX 6000D", "GB202"},	// China-market Blackwell workstation
+	{"RTX 6000 Ada", "AD102"},
+	{"RTX 6000", "TU102"},	// Turing-generation workstation
 	{"RTX 5090", "GB202"},	{"RTX 5080", "GB203"},
 	{"RTX 5070 Ti", "GB203"},	{"RTX 5070", "GB205"},
 	{"RTX 4090", "AD102"},	{"RTX 4080", "AD103"},
