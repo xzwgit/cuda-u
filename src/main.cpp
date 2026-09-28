@@ -11,7 +11,7 @@
 
 namespace {
 
-const char *kVersion = "0.0.1";
+const char *kVersion = "0.0.2";
 
 void usage() {
 	printf(
