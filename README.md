@@ -51,8 +51,16 @@ Notes on the numbers, so they can be compared against spec sheets:
   kernel, which shares the FP8 issue slot (reads ≈ FP8); `NVFP4` is the
   block-scaled format spec sheets quote, measured as a real NVFP4 GEMM
   through cuBLASLt (loaded lazily — no hard dependency), reaching the dense
-  spec rate (~1.6 PFLOPS on an RTX 5090). Cards without the hardware or
-  without libcublasLt report `N/A`;
+  spec rate (~1.6 PFLOPS on an RTX 5090, ~9.3 PFLOPS on a B300). Cards
+  without the hardware or without libcublasLt report `N/A`;
+- the two FP4 rows are **not equally reachable**: `NVFP4` works on consumer
+  *and* datacenter Blackwell (`cc >= 10.0`), whereas `FP4 (E2M1)` is
+  **consumer-only**. The `mma.sync ... kind::f8f6f4` spelling that carries
+  E2M1 operands does not exist for the `sm_100` family — ptxas rejects it
+  outright (`Instruction 'mma with FP6/FP4 floating point type' not
+  supported on .target 'sm_100f'`). Datacenter Blackwell feeds FP4 through
+  `tcgen05.mma`, which this tool does not implement, so that row reports
+  `N/A` on B200/B300;
 - INT4 on Blackwell runs on a legacy compatibility path (~1/7 of INT8);
   Ampere/Ada run it at the full 2× INT8 rate;
 - vector FP16/BF16 on GeForce parts are 1:1 with FP32 by design.

@@ -1,5 +1,6 @@
 // cuda-u — CUDA side: device facts + benchmark kernels.
 // MIT License. See LICENSE.
+#include <cstdint>          // uint32_t (CUDA 13.2 no longer pulls it in transitively)
 #include "report.h"
 #include "board.h"
 #include "fp4gemm.h"
@@ -482,7 +483,7 @@ bool runSuite(int device, Report &r, std::string &err) {
 
 	// NVFP4 (block-scaled e2m1 + ue4m3 scales): only as a real GEMM through
 	// cuBLASLt, loaded lazily. No library / pre-Blackwell hardware -> N/A.
-	r.fp4nv.supported = cc >= 120;
+	r.fp4nv.supported = cc >= 100;  // cuBLASLt block-scaled NVFP4 GEMM also exists on sm_100/103 (datacenter Blackwell)
 	if(r.fp4nv.supported) {
 		double gemm = fp4GemmTflops(8192, 8);
 		r.fp4nv.supported = gemm > 0;
