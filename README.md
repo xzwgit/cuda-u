@@ -7,16 +7,20 @@ MIT licensed, written from scratch.
 
 ## Install
 
-Grab the static binary from the [releases](releases) page:
+Build from source (CUDA Toolkit 12.8+ required, 13.x tested):
 
 ```bash
-wget -O cuda-u https://github.com/xzwgit/cuda-u/releases/latest/download/cuda-u-linux-x64
-chmod +x cuda-u
+git clone https://github.com/xzwgit/cuda-u.git
+cd cuda-u
+make
 ./cuda-u
 ```
 
-Statically linked — needs only the NVIDIA driver (no CUDA toolkit, no root,
-no X). `sudo mv cuda-u /usr/local/bin` puts it on PATH.
+No pre-built binaries are shipped: the tool compiles kernel code for
+specific GPU architectures at build time, so building on the target host
+with its own CUDA version avoids driver/toolkit mismatches and ensures
+the correct `mma.sync` / `tcgen05` code paths are generated. The build
+takes ~30 seconds on a typical server.
 
 ## What it measures
 
