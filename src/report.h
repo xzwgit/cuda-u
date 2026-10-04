@@ -50,7 +50,7 @@ struct Report {
 	Rate tf32t, fp16t, bf16t, fp8t, int8t, int4t, fp4t;
 
 	// GEMM paths — cuBLASLt (library-achievable; uses tcgen05 on sm_100+)
-	Rate bf16g, fp8g, fp4nv;
+	Rate bf16g, fp8g, int8g, fp4nv;
 };
 
 bool collectFacts(int device, DeviceFacts &out, std::string &err);

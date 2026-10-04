@@ -500,6 +500,14 @@ bool runSuite(int device, Report &r, std::string &err) {
 			r.fp8g.opsPerSec = g * 1e12;
 	}
 
+	r.int8g.supported = cc >= 70;
+	if(r.int8g.supported) {
+		double g = gemmBenchTflops(GEMM_INT8, 8192, 8);
+		r.int8g.supported = g > 0;
+		if(r.int8g.supported)
+			r.int8g.opsPerSec = g * 1e12;
+	}
+
 	r.fp4nv.supported = cc >= 100;
 	if(r.fp4nv.supported) {
 		double gemm = gemmBenchTflops(GEMM_NVFP4, 8192, 8);

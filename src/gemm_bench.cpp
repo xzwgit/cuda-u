@@ -117,7 +117,9 @@ double gemmBenchTflops(int gemmType, int size, int iters) {
 	};
 
 	if(lib.create(&handle) != CUBLAS_STATUS_SUCCESS) { cleanup(); return 0; }
-	if(lib.descCreate(&op, CUBLAS_COMPUTE_32F, CUDA_R_32F) != CUBLAS_STATUS_SUCCESS) { cleanup(); return 0; }
+	cublasComputeType_t compType = (gemmType == GEMM_INT8) ? CUBLAS_COMPUTE_32I : CUBLAS_COMPUTE_32F;
+	cudaDataType_t scaleType = (gemmType == GEMM_INT8) ? CUDA_R_32I : CUDA_R_32F;
+	if(lib.descCreate(&op, compType, scaleType) != CUBLAS_STATUS_SUCCESS) { cleanup(); return 0; }
 
 	cublasOperation_t ta = CUBLAS_OP_T, tb = CUBLAS_OP_N;
 	const size_t elems = (size_t)size * size;
@@ -142,14 +144,20 @@ double gemmBenchTflops(int gemmType, int size, int iters) {
 		useScales = true;
 		break;
 	}
+	case GEMM_INT8:
+		abType = CUDA_R_8I;
+		aBytes = elems;
+		break;
+	// note: INT8 GEMM uses INT32 output, handled below
 	default:
 		cleanup();
 		return 0;
 	}
 	const int32_t scaleMode = CUBLASLT_MATMUL_MATRIX_SCALE_VEC16_UE4M3;
 
+	size_t dBytes = (gemmType == GEMM_INT8) ? elems * 4 : elems * 2;
 	if(cudaMalloc(&a, aBytes) || cudaMalloc(&b, aBytes) ||
-	   cudaMalloc(&d, elems * 2)) {  // bf16 out for all formats
+	   cudaMalloc(&d, dBytes)) {  // bf16 out for all formats
 		cudaGetLastError(); cleanup(); return 0;
 	}
 	if(useScales && (cudaMalloc(&sa, scaleBytes) || cudaMalloc(&sb, scaleBytes))) {
@@ -177,6 +185,11 @@ double gemmBenchTflops(int gemmType, int size, int iters) {
 		cudaMemset(a, 0x30, aBytes);
 		cudaMemset(b, 0x30, aBytes);
 		break;
+	case GEMM_INT8:
+		// value 1 in int8 = 0x01
+		cudaMemset(a, 0x01, aBytes);
+		cudaMemset(b, 0x01, aBytes);
+		break;
 	case GEMM_NVFP4:
 		// 0.5 in e2m1 = 0b0010 -> byte 0x22 (two per byte)
 		cudaMemset(a, 0x22, aBytes);
@@ -193,7 +206,7 @@ double gemmBenchTflops(int gemmType, int size, int iters) {
 		cudaMemset(a, 0x3F, aBytes);
 		cudaMemset(b, 0x3F, aBytes);
 	}
-	cudaMemset(d, 0, elems * 2);
+	cudaMemset(d, 0, dBytes);
 
 	int rc = 0;
 	rc |= (int)lib.descSet(op, CUBLASLT_MATMUL_DESC_TRANSA, &ta, sizeof ta);
@@ -206,8 +219,9 @@ double gemmBenchTflops(int gemmType, int size, int iters) {
 	}
 	rc |= (int)lib.layoutCreate(&la, abType, size, size, size);
 	rc |= (int)lib.layoutCreate(&lb, abType, size, size, size);
-	rc |= (int)lib.layoutCreate(&lc, CUDA_R_16BF, size, size, size);
-	rc |= (int)lib.layoutCreate(&ld, CUDA_R_16BF, size, size, size);
+	cudaDataType_t outType = (gemmType == GEMM_INT8) ? CUDA_R_32I : CUDA_R_16BF;
+	rc |= (int)lib.layoutCreate(&lc, outType, size, size, size);
+	rc |= (int)lib.layoutCreate(&ld, outType, size, size, size);
 	rc |= (int)lib.prefCreate(&pref);
 	if(rc != 0) { cleanup(); return 0; }
 
@@ -221,7 +235,10 @@ double gemmBenchTflops(int gemmType, int size, int iters) {
 		cleanup(); return 0;  // GPU predates this format
 	}
 
-	float alpha = 1.f, beta = 0.f;
+		float alpha_f = 1.f, beta_f = 0.f;
+	int alpha_i = 1, beta_i = 0;
+	void* alpha = (gemmType == GEMM_INT8) ? (void*)&alpha_i : (void*)&alpha_f;
+	void* beta = (gemmType == GEMM_INT8) ? (void*)&beta_i : (void*)&beta_f;
 	const double flopsPerCall = 2.0 * (double)size * size * size;
 	cudaEventCreate(&ev0);
 	cudaEventCreate(&ev1);
@@ -229,7 +246,7 @@ double gemmBenchTflops(int gemmType, int size, int iters) {
 	for(int cand = 0; cand < found; cand++) {
 		if(heur[cand].state != CUBLAS_STATUS_SUCCESS || heur[cand].workspaceSize > wsBytes)
 			continue;
-		if(lib.matmul(handle, op, &alpha, a, la, b, lb, &beta, d, lc, d, ld,
+		if(lib.matmul(handle, op, alpha, a, la, b, lb, beta, d, lc, d, ld,
 		              &heur[cand].algo, ws, wsBytes, 0) != CUBLAS_STATUS_SUCCESS) {
 			cudaGetLastError();
 			continue;
@@ -239,7 +256,7 @@ double gemmBenchTflops(int gemmType, int size, int iters) {
 		for(int rep = 0; rep < 3; rep++) {
 			cudaEventRecord(ev0);
 			for(int i = 0; i < iters; i++)
-				lib.matmul(handle, op, &alpha, a, la, b, lb, &beta, d, lc, d, ld,
+				lib.matmul(handle, op, alpha, a, la, b, lb, beta, d, lc, d, ld,
 				           &heur[cand].algo, ws, wsBytes, 0);
 			cudaEventRecord(ev1);
 			cudaEventSynchronize(ev1);
