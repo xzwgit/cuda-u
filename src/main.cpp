@@ -153,14 +153,14 @@ void printText(const Report &r, bool staticOnly) {
 
 	if(!staticOnly) {
 	banner("Compute");
-	printf("  %-19s%16s%18s\n", "", "vector path", "tensor path");
+	printf("  %-19s%16s%18s%18s\n", "", "vector path", "tensor (mma)", "GEMM (cuBLAS)");
 	rule();
 	printf("  %-19s%16s%18s\n", "FP64", fmtRate(r.fp64, false).c_str(), "N/A");
 	printf("  %-19s%16s%18s\n", "FP32", fmtRate(r.fp32, false).c_str(), "N/A");
 	printf("  %-19s%16s%18s\n", "TF32", "N/A", fmtRate(r.tf32t, false).c_str());
-	printf("  %-19s%16s%18s\n", "BF16", fmtRate(r.bf16, false).c_str(), fmtRate(r.bf16t, false).c_str());
+	printf("  %-19s%16s%18s%18s\n", "BF16", fmtRate(r.bf16, false).c_str(), fmtRate(r.bf16t, false).c_str(), fmtRate(r.bf16g, false).c_str());
 	printf("  %-19s%16s%18s\n", "FP16", fmtRate(r.fp16, false).c_str(), fmtRate(r.fp16t, false).c_str());
-	printf("  %-19s%16s%18s\n", "FP8 (E4M3)", "N/A", fmtRate(r.fp8t, false).c_str());
+	printf("  %-19s%16s%18s%18s\n", "FP8 (E4M3)", "N/A", fmtRate(r.fp8t, false).c_str(), fmtRate(r.fp8g, false).c_str());
 	printf("  %-19s%16s%18s\n", "INT8 (DP4A)", fmtRate(r.int8dp4a, true).c_str(), "N/A");
 	printf("  %-19s%16s%18s\n", "INT8", "N/A", fmtRate(r.int8t, true).c_str());
 	printf("  %-19s%16s%18s\n", "FP4 (E2M1)", "N/A", fmtRate(r.fp4t, false).c_str());
@@ -239,6 +239,8 @@ std::string buildJson(const Report &r) {
 	j += rateJson("int8_dp4a", r.int8dp4a, true);
 	j += rateJson("int8_tensor", r.int8t, true);
 	j += rateJson("fp4_tensor", r.fp4t, false);
+	j += rateJson("bf16_gemm", r.bf16g, false);
+	j += rateJson("fp8_gemm", r.fp8g, false);
 	j += rateJson("nvfp4_tensor", r.fp4nv, false);
 	j += rateJson("int4_tensor", r.int4t, true);
 	j.pop_back();		// trailing comma of the last entry

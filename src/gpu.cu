@@ -3,7 +3,7 @@
 #include <cstdint>          // uint32_t (CUDA 13.2 no longer pulls it in transitively)
 #include "report.h"
 #include "board.h"
-#include "fp4gemm.h"
+#include "gemm_bench.h"
 
 #include <cuda_fp16.h>
 #include <cuda_runtime.h>
@@ -481,11 +481,28 @@ bool runSuite(int device, Report &r, std::string &err) {
 	}
 #endif
 
-	// NVFP4 (block-scaled e2m1 + ue4m3 scales): only as a real GEMM through
-	// cuBLASLt, loaded lazily. No library / pre-Blackwell hardware -> N/A.
-	r.fp4nv.supported = cc >= 100;  // cuBLASLt block-scaled NVFP4 GEMM also exists on sm_100/103 (datacenter Blackwell)
+	// GEMM paths via cuBLASLt (tcgen05.mma on sm_100+, full library-achievable
+	// rate). mma.sync above only exercises the legacy warp-level path, which on
+	// datacenter Blackwell is ~4x below the tcgen05 rate.
+	r.bf16g.supported = cc >= 80;
+	if(r.bf16g.supported) {
+		double g = gemmBenchTflops(GEMM_BF16, 8192, 8);
+		r.bf16g.supported = g > 0;
+		if(r.bf16g.supported)
+			r.bf16g.opsPerSec = g * 1e12;
+	}
+
+	r.fp8g.supported = cc >= 89;
+	if(r.fp8g.supported) {
+		double g = gemmBenchTflops(GEMM_FP8, 8192, 8);
+		r.fp8g.supported = g > 0;
+		if(r.fp8g.supported)
+			r.fp8g.opsPerSec = g * 1e12;
+	}
+
+	r.fp4nv.supported = cc >= 100;
 	if(r.fp4nv.supported) {
-		double gemm = fp4GemmTflops(8192, 8);
+		double gemm = gemmBenchTflops(GEMM_NVFP4, 8192, 8);
 		r.fp4nv.supported = gemm > 0;
 		if(r.fp4nv.supported)
 			r.fp4nv.opsPerSec = gemm * 1e12;
