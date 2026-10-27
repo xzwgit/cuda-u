@@ -34,9 +34,9 @@ Each precision in both flavours where the hardware has them — the vector path
 | BF16 / FP16 | packed hfma2 | m16n8k16 |
 | FP8 (E4M3) | — | m16n8k32 (sm_89+) |
 | INT8 | `__dp4a` | m16n8k32 s8 |
-| FP8 (E3M4)* | — | cubin-patched mma (SM120/SM121 only) |
+| FP8 (E3M4) | — | cubin-patched mma (SM120/SM121 only) |
 | FP4 (E2M1) | — | m16n8k32 kind::f8f6f4 (consumer Blackwell) |
-| FP4 (E0M3)* | — | cubin-patched block-scaled mma, scale_vec::4X (SM120/SM121 only) |
+| FP4 (E0M3) | — | cubin-patched block-scaled mma, scale_vec::4X (SM120/SM121 only) |
 | NVFP4 | — | block-scaled GEMM via cuBLASLt (consumer Blackwell) |
 | INT4 | — | m16n8k32 s4 |
 
@@ -67,7 +67,7 @@ Notes on the numbers, so they can be compared against spec sheets:
   supported on .target 'sm_100f'`). Datacenter Blackwell feeds FP4 through
   `tcgen05.mma`, which this tool does not implement, so that row reports
   `N/A` on B200/B300;
-- `*` **hidden Tensor Core formats**: FP8 E3M4 and FP4 E0M3 exist in Blackwell
+- **hidden Tensor Core formats** (FP8 E3M4, FP4 E0M3): FP8 E3M4 and FP4 E0M3 exist in Blackwell
   (SM120/SM121) tensor hardware but not in the PTX type system — ptxas rejects
   their spelling. The tool compiles placeholder E5M2 / E2M1 kernels, then
   rewrites the SASS instruction-encoding bits at build time

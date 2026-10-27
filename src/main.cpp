@@ -162,11 +162,11 @@ void printText(const Report &r, bool staticOnly) {
 	printf("  %-19s%16s%18s%18s\n", "BF16", fmtRate(r.bf16, false).c_str(), fmtRate(r.bf16t, false).c_str(), fmtRate(r.bf16g, false).c_str());
 	printf("  %-19s%16s%18s\n", "FP16", fmtRate(r.fp16, false).c_str(), fmtRate(r.fp16t, false).c_str());
 	printf("  %-19s%16s%18s%18s\n", "FP8 (E4M3)", "N/A", fmtRate(r.fp8t, false).c_str(), fmtRate(r.fp8g, false).c_str());
-	printf("  %-19s%16s%18s\n", "FP8 (E3M4)*", "N/A", fmtRate(r.fp8e3m4t, false).c_str());
+	printf("  %-19s%16s%18s\n", "FP8 (E3M4)", "N/A", fmtRate(r.fp8e3m4t, false).c_str());
 	printf("  %-19s%16s%18s\n", "INT8 (DP4A)", fmtRate(r.int8dp4a, true).c_str(), "N/A");
 	printf("  %-19s%16s%18s%18s\n", "INT8", "N/A", fmtRate(r.int8t, true).c_str(), fmtRate(r.int8g, true).c_str());
 	printf("  %-19s%16s%18s\n", "FP4 (E2M1)", "N/A", fmtRate(r.fp4t, false).c_str());
-	printf("  %-19s%16s%18s\n", "FP4 (E0M3)*", "N/A", fmtRate(r.fp4e0m3t, false).c_str());
+	printf("  %-19s%16s%18s\n", "FP4 (E0M3)", "N/A", fmtRate(r.fp4e0m3t, false).c_str());
 	printf("  %-19s%16s%18s\n", "NVFP4", "N/A", fmtRate(r.fp4nv, false).c_str());
 	printf("  %-19s%16s%18s\n", "INT4", "N/A", fmtRate(r.int4t, true).c_str());
 	rule();
