@@ -34,8 +34,8 @@ Each precision in both flavours where the hardware has them — the vector path
 | BF16 / FP16 | packed hfma2 | m16n8k16 |
 | FP8 (E4M3) | — | m16n8k32 (sm_89+) |
 | INT8 | `__dp4a` | m16n8k32 s8 |
-| FP4 (E2M1) | — | m16n8k32 kind::f8f6f4 (consumer Blackwell) |
 | FP8 (E3M4)* | — | cubin-patched mma (SM120/SM121 only) |
+| FP4 (E2M1) | — | m16n8k32 kind::f8f6f4 (consumer Blackwell) |
 | FP4 (E0M3)* | — | cubin-patched block-scaled mma, scale_vec::4X (SM120/SM121 only) |
 | NVFP4 | — | block-scaled GEMM via cuBLASLt (consumer Blackwell) |
 | INT4 | — | m16n8k32 s4 |
