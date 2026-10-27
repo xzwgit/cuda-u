@@ -105,7 +105,7 @@ JSON carries raw values plus `supported` flags, e.g.:
 Full report on an RTX 5090 (`./cuda-u`):
 
 ```
-cuda-u 0.0.2 report - GPU 0: NVIDIA GeForce RTX 5090
+cuda-u 0.0.3 report - GPU 0: NVIDIA GeForce RTX 5090
 
 ---- Device ------------------------------------------------------------------
   Name               NVIDIA GeForce RTX 5090
