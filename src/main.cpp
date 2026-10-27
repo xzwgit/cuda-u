@@ -1,6 +1,7 @@
 // cuda-u — command line front end: text and JSON reports.
 // MIT License. See LICENSE.
 #include "report.h"
+#include "hidden.h"
 
 #include <cuda_runtime.h>
 
@@ -165,6 +166,8 @@ void printText(const Report &r, bool staticOnly) {
 	printf("  %-19s%16s%18s%18s\n", "INT8", "N/A", fmtRate(r.int8t, true).c_str(), fmtRate(r.int8g, true).c_str());
 	printf("  %-19s%16s%18s\n", "FP4 (E2M1)", "N/A", fmtRate(r.fp4t, false).c_str());
 	printf("  %-19s%16s%18s\n", "NVFP4", "N/A", fmtRate(r.fp4nv, false).c_str());
+	printf("  %-19s%16s%18s\n", "FP8 (E3M4)*", "N/A", fmtRate(r.fp8e3m4t, false).c_str());
+	printf("  %-19s%16s%18s\n", "FP4 (E0M3)*", "N/A", fmtRate(r.fp4e0m3t, false).c_str());
 	printf("  %-19s%16s%18s\n", "INT4", "N/A", fmtRate(r.int4t, true).c_str());
 	rule();
 	}			// !staticOnly
@@ -243,6 +246,8 @@ std::string buildJson(const Report &r) {
 	j += rateJson("bf16_gemm", r.bf16g, false);
 	j += rateJson("fp8_gemm", r.fp8g, false);
 	j += rateJson("nvfp4_tensor", r.fp4nv, false);
+	j += rateJson("fp8_e3m4_tensor", r.fp8e3m4t, false);
+	j += rateJson("fp4_e0m3_tensor", r.fp4e0m3t, false);
 	j += rateJson("int4_tensor", r.int4t, true);
 	j.pop_back();		// trailing comma of the last entry
 	j.back() = '\n';
@@ -332,6 +337,8 @@ int main(int argc, char **argv) {
 			failed++;
 			continue;
 		}
+		if(bench && !runHiddenFormats(i, rep, err))
+			fprintf(stderr, "warning: device %d hidden formats: %s\n", i, err.c_str());
 		if(json) {
 			std::string doc = buildJson(rep);
 			while(!doc.empty() && doc.back() == '\n')

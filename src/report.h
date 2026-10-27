@@ -49,6 +49,9 @@ struct Report {
 	// tensor paths — mma.sync (kernel-level)
 	Rate tf32t, fp16t, bf16t, fp8t, int8t, int4t, fp4t;
 
+	// hidden SM120/121 formats — cubin-patched mma.sync (FP8 E3M4 / FP4 E0M3)
+	Rate fp8e3m4t, fp4e0m3t;
+
 	// GEMM paths — cuBLASLt (library-achievable; uses tcgen05 on sm_100+)
 	Rate bf16g, fp8g, int8g, fp4nv;
 };

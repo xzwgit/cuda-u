@@ -35,6 +35,8 @@ Each precision in both flavours where the hardware has them — the vector path
 | FP8 (E4M3) | — | m16n8k32 (sm_89+) |
 | INT8 | `__dp4a` | m16n8k32 s8 |
 | FP4 (E2M1) | — | m16n8k32 kind::f8f6f4 (consumer Blackwell) |
+| FP8 (E3M4)* | — | cubin-patched mma (SM120/SM121 only) |
+| FP4 (E0M3)* | — | cubin-patched block-scaled mma, scale_vec::4X (SM120/SM121 only) |
 | NVFP4 | — | block-scaled GEMM via cuBLASLt (consumer Blackwell) |
 | INT4 | — | m16n8k32 s4 |
 
@@ -65,6 +67,18 @@ Notes on the numbers, so they can be compared against spec sheets:
   supported on .target 'sm_100f'`). Datacenter Blackwell feeds FP4 through
   `tcgen05.mma`, which this tool does not implement, so that row reports
   `N/A` on B200/B300;
+- `*` **hidden Tensor Core formats**: FP8 E3M4 and FP4 E0M3 exist in Blackwell
+  (SM120/SM121) tensor hardware but not in the PTX type system — ptxas rejects
+  their spelling. The tool compiles placeholder E5M2 / E2M1 kernels, then
+  rewrites the SASS instruction-encoding bits at build time
+  (`tools/patch_cubin.cpp`: QMMA format fields {78,82,83}/{79,84,85} for E3M4,
+  OMMA bits 78/79 for E0M3, which additionally requires the scale_vec::4X
+  form). The patched cubins are embedded in the binary and loaded through the
+  driver API. Measured issue rates match their public counterparts (E3M4 ≈
+  E4M3, same slot). Discovery and encoding credits: the
+  [Humming](https://github.com/vllm-project/humming) project (Apache-2.0),
+  which uses the same technique inside its JIT. On other architectures these
+  rows read `N/A`.
 - INT4 on Blackwell runs on a legacy compatibility path (~1/7 of INT8);
   Ampere/Ada run it at the full 2× INT8 rate;
 - vector FP16/BF16 on GeForce parts are 1:1 with FP32 by design.
